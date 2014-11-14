@@ -6,9 +6,24 @@ Trivial templating for configuration files using environment keys:
 * Definitions without a value result in an error
 * envplate can optionally
 	* create backups using the `-b` flag, appending a `.bak` extension to backup copies
-	* optionally output to stdout instead of replacing values in files using the `-d` flag
+	* output to stdout instead of replacing values in files using the `-d` flag
+	* be verbose about it's operations by using the `-v` flag
 
-Example: `envplate /etc/nginx/*.conf`
+Example: 
+
+```
+$ cat /etc/foo.conf
+Database=${FOO_DATABASE}
+Mode=fancy
+
+$ export FOO_DATABASE=db.example.com
+
+$ ep /etc/f*.conf
+
+$ cat /etc/foo.conf
+Database=db.example.com
+Mode=fancy
+```
 
 ## Why?
 

@@ -17,27 +17,25 @@ type Envplate struct {
 	Backup, Debug, Verbose *bool
 }
 
-func (e *Envplate) Apply(globs []string) error {
+func (e *Envplate) Apply(globs []string) {
 
 	for _, pattern := range globs {
 
 		files, err := filepath.Glob(pattern)
 
 		if err != nil {
-			return err
+			e.log(ERROR, err.Error())
 		}
 
 		for _, name := range files {
 
 			if err := e.parse(name); err != nil {
-				return err
+				e.log(ERROR, "Error while parsing '%s': %v", name, err)
 			}
 
 		}
 
 	}
-
-	return nil
 
 }
 

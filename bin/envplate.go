@@ -4,13 +4,41 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"syscall"
 
 	env "github.com/yawn/envplate"
 )
 
 var build string
 
+func split() (flags []string, execArgs []string) {
+
+	split := len(os.Args)
+
+	for idx, e := range os.Args {
+
+		if e == "--" {
+			split = idx
+			break
+		}
+
+	}
+
+	flags = os.Args[1:split]
+
+	if split < len(os.Args) {
+		execArgs = os.Args[split+1 : len(os.Args)]
+	}
+
+	return flags, execArgs
+
+}
+
 func main() {
+
+	flags, execArgs := split()
+
+	os.Args = flags
 
 	help := flag.Bool("h", false, "display usage")
 
@@ -27,6 +55,14 @@ func main() {
 		flag.PrintDefaults()
 	} else {
 		e.Apply(flag.Args())
+	}
+
+	if len(execArgs) > 0 {
+
+		if err := syscall.Exec(execArgs[0], execArgs, os.Environ()); err != nil {
+			e.Log(env.ERROR, "Cannot exec '%v': %v", execArgs, err)
+		}
+
 	}
 
 }

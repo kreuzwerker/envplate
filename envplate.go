@@ -24,13 +24,13 @@ func (e *Envplate) Apply(globs []string) {
 		files, err := filepath.Glob(pattern)
 
 		if err != nil {
-			e.log(ERROR, err.Error())
+			e.Log(ERROR, err.Error())
 		}
 
 		for _, name := range files {
 
 			if err := e.parse(name); err != nil {
-				e.log(ERROR, "Error while parsing '%s': %v", name, err)
+				e.Log(ERROR, "Error while parsing '%s': %v", name, err)
 			}
 
 		}
@@ -73,16 +73,16 @@ func (e *Envplate) parse(file string) error {
 		return fmt.Errorf("Cannot open %s: %v", file, err)
 	}
 
-	e.log(DEBUG, "Parsing environment references in '%s'", file)
+	e.Log(DEBUG, "Parsing environment references in '%s'", file)
 
 	parsed := os.Expand(string(content), func(key string) string {
 
 		value := os.Getenv(key)
 
-		e.log(DEBUG, "Expanding reference to '%s' to value '%s'", key, value)
+		e.Log(DEBUG, "Expanding reference to '%s' to value '%s'", key, value)
 
 		if value == NoKeyDefined {
-			e.log(ERROR, "'%s' requires undeclared environment variable '%s'", file, key)
+			e.Log(ERROR, "'%s' requires undeclared environment variable '%s'", file, key)
 		}
 
 		return value
@@ -90,12 +90,12 @@ func (e *Envplate) parse(file string) error {
 	})
 
 	if *e.Debug {
-		e.log(INFO, "Expanding all references in '%s' would look like this:\n%s", file, parsed)
+		e.Log(INFO, "Expanding all references in '%s' would look like this:\n%s", file, parsed)
 	} else {
 
 		if *e.Backup {
 
-			e.log(DEBUG, "Creating backup of '%s'", file)
+			e.Log(DEBUG, "Creating backup of '%s'", file)
 
 			if err := e.createBackup(file); err != nil {
 				return err
@@ -120,7 +120,7 @@ const (
 	ERROR          = "ERROR"
 )
 
-func (e *Envplate) log(lvl logLevel, msg string, args ...interface{}) {
+func (e *Envplate) Log(lvl logLevel, msg string, args ...interface{}) {
 
 	if lvl == DEBUG && !*e.Verbose {
 		return

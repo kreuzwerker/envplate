@@ -1,5 +1,7 @@
 # Envplate
 
+[![Build Status](https://travis-ci.org/yawn/envplate.svg)](https://travis-ci.org/yawn/envplate)
+
 Trivial templating for configuration files using environment keys:
 
 1. Keys are defined as `${key}` in various configuration files (glob patterns work)
@@ -9,7 +11,7 @@ Trivial templating for configuration files using environment keys:
 	* output to stdout instead of replacing values in files using the `-d` flag
 	* be verbose about it's operations by using the `-v` flag
 
-Example: 
+Example:
 
 ```
 $ cat /etc/foo.conf

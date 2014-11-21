@@ -14,6 +14,8 @@ const (
 
 func Apply(globs []string) {
 
+	matches := false
+
 	for _, pattern := range globs {
 
 		files, err := filepath.Glob(pattern)
@@ -24,12 +26,18 @@ func Apply(globs []string) {
 
 		for _, name := range files {
 
+			matches = true
+
 			if err := parse(name); err != nil {
 				Log(ERROR, "Error while parsing '%s': %v", name, err)
 			}
 
 		}
 
+	}
+
+	if !matches {
+		Log(ERROR, "Zero files matched passed globs '%v'", globs)
 	}
 
 }

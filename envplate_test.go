@@ -1,6 +1,7 @@
 package envplate
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -94,7 +95,26 @@ func TestCreateBackup(t *testing.T) {
 
 }
 
-func TestParse(t *testing.T) {
+func TestApplyNoGlobs(t *testing.T) {
+
+	var buf bytes.Buffer
+
+	ErrorFunc = func(format string, args ...interface{}) {
+		fmt.Fprintf(&buf, format, args...)
+	}
+
+	globs := []string{
+		"*.not-here",
+		"*.not-there",
+	}
+
+	Apply(globs)
+
+	assert.Equal(t, "[ ERROR ] Zero files matched passed globs '[*.not-here *.not-there]'", buf.String())
+
+}
+
+func TestFullParse(t *testing.T) {
 
 	Config.Backup = true
 	Config.DryRun = false

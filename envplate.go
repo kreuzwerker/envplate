@@ -56,6 +56,10 @@ func createBackup(file string) error {
 		return err
 	}
 
+	if err := os.Chmod(target.Name(), filemode(source.Name())); err != nil {
+		return err
+	}
+
 	return nil
 
 }

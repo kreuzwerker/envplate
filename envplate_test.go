@@ -90,7 +90,7 @@ func TestCreateBackup(t *testing.T) {
 	content := _read(t, backup)
 
 	assert.Equal("hello world", content)
-	assert.Equal(filemode(file), filemode(backup))
+	assert.Equal(filemode(file).String(), filemode(backup).String())
 
 }
 

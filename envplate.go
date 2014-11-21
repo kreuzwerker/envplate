@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 )
@@ -13,24 +12,20 @@ const (
 	NoKeyDefined = ""
 )
 
-type Envplate struct {
-	Backup, Debug, Verbose *bool
-}
-
-func (e *Envplate) Apply(globs []string) {
+func Apply(globs []string) {
 
 	for _, pattern := range globs {
 
 		files, err := filepath.Glob(pattern)
 
 		if err != nil {
-			e.Log(ERROR, err.Error())
+			Log(ERROR, err.Error())
 		}
 
 		for _, name := range files {
 
-			if err := e.parse(name); err != nil {
-				e.Log(ERROR, "Error while parsing '%s': %v", name, err)
+			if err := parse(name); err != nil {
+				Log(ERROR, "Error while parsing '%s': %v", name, err)
 			}
 
 		}
@@ -39,7 +34,7 @@ func (e *Envplate) Apply(globs []string) {
 
 }
 
-func (e *Envplate) createBackup(file string) error {
+func createBackup(file string) error {
 
 	source, err := os.Open(file)
 
@@ -65,7 +60,7 @@ func (e *Envplate) createBackup(file string) error {
 
 }
 
-func (e *Envplate) parse(file string) error {
+func parse(file string) error {
 
 	content, err := ioutil.ReadFile(file)
 
@@ -73,38 +68,37 @@ func (e *Envplate) parse(file string) error {
 		return fmt.Errorf("Cannot open %s: %v", file, err)
 	}
 
-	e.Log(DEBUG, "Parsing environment references in '%s'", file)
+	Log(DEBUG, "Parsing environment references in '%s'", file)
 
 	parsed := os.Expand(string(content), func(key string) string {
 
 		value := os.Getenv(key)
 
-		e.Log(DEBUG, "Expanding reference to '%s' to value '%s'", key, value)
+		Log(DEBUG, "Expanding reference to '%s' to value '%s'", key, value)
 
 		if value == NoKeyDefined {
-			e.Log(ERROR, "'%s' requires undeclared environment variable '%s'", file, key)
+			Log(ERROR, "'%s' requires undeclared environment variable '%s'", file, key)
 		}
 
 		return value
 
 	})
 
-	if *e.Debug {
-		e.Log(INFO, "Expanding all references in '%s' would look like this:\n%s", file, parsed)
+	if Config.DryRun {
+		Log(INFO, "Expanding all references in '%s' would look like this:\n%s", file, parsed)
 	} else {
 
-		if *e.Backup {
+		if Config.Backup {
 
-			e.Log(DEBUG, "Creating backup of '%s'", file)
+			Log(DEBUG, "Creating backup of '%s'", file)
 
-			if err := e.createBackup(file); err != nil {
+			if err := createBackup(file); err != nil {
 				return err
 			}
 
 		}
 
-		// TODO: take over permissions from original file
-		return ioutil.WriteFile(file, []byte(parsed), 0644)
+		return ioutil.WriteFile(file, []byte(parsed), filemode(file))
 
 	}
 
@@ -112,26 +106,14 @@ func (e *Envplate) parse(file string) error {
 
 }
 
-type logLevel string
+func filemode(file string) os.FileMode {
 
-const (
-	DEBUG logLevel = "DEBUG"
-	INFO           = "INFO"
-	ERROR          = "ERROR"
-)
+	fileinfo, err := os.Stat(file)
 
-func (e *Envplate) Log(lvl logLevel, msg string, args ...interface{}) {
-
-	if lvl == DEBUG && !*e.Verbose {
-		return
+	if err != nil {
+		Log(ERROR, "Cannot state '%s': %v", file, err)
 	}
 
-	msg = fmt.Sprintf("[ %s ] %s", lvl, msg)
-
-	if lvl == ERROR {
-		log.Fatalf(msg, args...)
-	} else {
-		log.Printf(msg, args...)
-	}
+	return fileinfo.Mode()
 
 }

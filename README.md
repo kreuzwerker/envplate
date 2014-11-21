@@ -4,7 +4,7 @@
 
 Trivial templating for configuration files using environment keys:
 
-1. Keys are defined as `${key}` in various configuration files (glob patterns work)
+1. Keys are defined as `${key}` or `$key` in various configuration files (glob patterns work)
 * Definitions without a value result in an error
 * envplate can optionally
 	* create backups using the `-b` flag, appending a `.bak` extension to backup copies
@@ -41,3 +41,7 @@ RUN curl -sLo /usr/local/bin/ep https://github.com/yawn/envplate/releases/downlo
 
 CMD [ "/usr/local/bin/ep", "-v", "/etc/nginx/nginx.conf", "--", "/usr/sbin/nginx", "-c", "/etc/nginx/conf" ]
 ```
+
+## TODO
+
+* (Maybe) drop the `$key` variable syntax (in favor of `${key}`-only)

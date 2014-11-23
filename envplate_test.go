@@ -38,11 +38,10 @@ func _read(t *testing.T, name string) string {
 
 func _template(t *testing.T) (string, string) {
 
-	tpl := `
-  Database1=${DATABASE}
+	tpl := `Database1=${DATABASE}
   Mode=${MODE}
   Database2=${DATABASE}
-  `
+  Database3=$FOOBAR`
 
 	return _write(t, "parse.txt", tpl, 0644), tpl
 
@@ -124,20 +123,19 @@ func TestFullParse(t *testing.T) {
 
 	assert := assert.New(t)
 
-	file, tpl := _template(t)
+	file, _ := _template(t)
 	defer _delete(t, file)
 
 	backup := fmt.Sprintf("%s.bak", file)
-	fmt.Println(backup)
-
-	//	time.Sleep(5 * time.Second)
 
 	err := parse(file)
 
 	assert.NoError(err)
-
 	assert.True(_exists(backup))
-	assert.NotEqual(tpl, _read(t, file), "content unchanged")
+	assert.Equal(`Database1=db.example.com
+  Mode=debug
+  Database2=db.example.com
+  Database3=$FOOBAR`, _read(t, file))
 
 }
 

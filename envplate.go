@@ -6,11 +6,14 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 )
 
 const (
 	NoKeyDefined = ""
 )
+
+var exp = regexp.MustCompile(`(\$\{\w+\})`)
 
 func Apply(globs []string) {
 
@@ -82,8 +85,9 @@ func parse(file string) error {
 
 	Log(DEBUG, "Parsing environment references in '%s'", file)
 
-	parsed := os.Expand(string(content), func(key string) string {
+	parsed := exp.ReplaceAllStringFunc(string(content), func(match string) string {
 
+		key := match[2 : len(match)-1]
 		value := os.Getenv(key)
 
 		Log(DEBUG, "Expanding reference to '%s' to value '%s'", key, value)

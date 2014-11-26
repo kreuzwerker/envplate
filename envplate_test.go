@@ -42,6 +42,7 @@ func _template(t *testing.T) (string, string) {
   Mode=${MODE}
   Database2=${DATABASE}
   Database4=${DATABASE1:-FOOBAR}
+  Database5=${DATABASE:-FOOBAR}
   Database3=$FOOBAR`
 
 	return _write(t, "parse.txt", tpl, 0644), tpl
@@ -137,6 +138,7 @@ func TestFullParse(t *testing.T) {
   Mode=debug
   Database2=db.example.com
   Database4=FOOBAR
+  Database5=db.example.com
   Database3=$FOOBAR`, _read(t, file))
 
 }

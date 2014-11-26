@@ -7,14 +7,14 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"strings"
 )
 
 const (
-	NoKeyDefined = ""
+	NoDefaultDefined = ""
+	NoKeyDefined     = ""
 )
 
-var exp = regexp.MustCompile(`(\$\{\w+((:-)\w+)?\})`)
+var exp = regexp.MustCompile(`\$\{(.+?)(?:\:\-(.+))?\}`)
 
 func Apply(globs []string) {
 
@@ -88,25 +88,29 @@ func parse(file string) error {
 
 	parsed := exp.ReplaceAllStringFunc(string(content), func(match string) string {
 
-		Log(INFO, match)
-
-		key := match[2 : len(match)-1]
-		defaultvalue := strings.Split(key, ":-")
-
-		if len(defaultvalue) == 2 {
-			key = defaultvalue[0]
-		}
-		Log(INFO, key)
-		value := os.Getenv(key)
+		var (
+			key, def = capture(match)
+			value    = os.Getenv(key)
+		)
 
 		if value == NoKeyDefined {
-			if len(defaultvalue) == 1 {
-				Log(ERROR, "'%s' requires undeclared environment variable '%s'", file, key)
-			}
-			value = defaultvalue[1]
-		}
 
-		Log(DEBUG, "Expanding reference to '%s' to value '%s'", key, value)
+			if def == NoDefaultDefined {
+				Log(ERROR, "'%s' requires undeclared environment variable '%s', no default is given", file, key)
+			} else {
+
+				if Config.Strict {
+					Log(ERROR, "'%s' requires undeclared environment variable '%s', but cannot use default '%s' (strict-mode)", file, key, def)
+				} else {
+					Log(DEBUG, "'%s' requires undeclared environment variable '%s', using default '%s'", file, key, def)
+					value = def
+				}
+
+			}
+
+		} else {
+			Log(DEBUG, "Expanding reference to '%s' to value '%s'", key, value)
+		}
 
 		return value
 
@@ -131,6 +135,17 @@ func parse(file string) error {
 	}
 
 	return nil
+
+}
+
+func capture(s string) (key, def string) {
+
+	matches := exp.FindStringSubmatch(s)
+
+	key = matches[1]
+	def = matches[2]
+
+	return key, def
 
 }
 

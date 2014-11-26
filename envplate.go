@@ -7,13 +7,14 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 )
 
 const (
 	NoKeyDefined = ""
 )
 
-var exp = regexp.MustCompile(`(\$\{\w+\})`)
+var exp = regexp.MustCompile(`(\$\{\w+((:-)\w+)?\})`)
 
 func Apply(globs []string) {
 
@@ -87,14 +88,25 @@ func parse(file string) error {
 
 	parsed := exp.ReplaceAllStringFunc(string(content), func(match string) string {
 
+		Log(INFO, match)
+
 		key := match[2 : len(match)-1]
+		defaultvalue := strings.Split(key, ":-")
+
+		if len(defaultvalue) == 2 {
+			key = defaultvalue[0]
+		}
+		Log(INFO, key)
 		value := os.Getenv(key)
 
-		Log(DEBUG, "Expanding reference to '%s' to value '%s'", key, value)
-
 		if value == NoKeyDefined {
-			Log(ERROR, "'%s' requires undeclared environment variable '%s'", file, key)
+			if len(defaultvalue) == 1 {
+				Log(ERROR, "'%s' requires undeclared environment variable '%s'", file, key)
+			}
+			value = defaultvalue[1]
 		}
+
+		Log(DEBUG, "Expanding reference to '%s' to value '%s'", key, value)
 
 		return value
 

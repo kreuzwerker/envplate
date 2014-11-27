@@ -180,6 +180,7 @@ func TestCapture(t *testing.T) {
 		{"${FOO:-at the bar}", "FOO", "at the bar"},
 		{"${FOO_3000:-near the bar}", "FOO_3000", "near the bar"},
 		{"${FOO:--1}", "FOO", "-1"},
+		{"${FOO:-http://www.example.com/bar/gar/war?a=b}", "FOO", "http://www.example.com/bar/gar/war?a=b"},
 	}
 
 	for _, tt := range tt {

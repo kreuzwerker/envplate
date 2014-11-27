@@ -8,6 +8,9 @@ build:
 	GOOS=darwin go build -o out/darwin/ep -ldflags "-X main.build `git rev-parse --short HEAD`" bin/envplate.go
 	GOOS=linux go build -o out/linux/ep -ldflags "-X main.build `git rev-parse --short HEAD`" bin/envplate.go
 
+clean:
+	rm -rf out
+
 release:
 	github-release release --user $(USER) --repo $(REPO) --tag $(VERSION) -s $(TOKEN)
 	github-release upload --user yawn --repo envplate --tag $(VERSION) -s $(TOKEN) --name ep-osx --file out/darwin/ep

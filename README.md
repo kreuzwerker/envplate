@@ -2,32 +2,30 @@
 
 [![Build Status](https://travis-ci.org/yawn/envplate.svg)](https://travis-ci.org/yawn/envplate)
 
-Trivial templating for configuration files using environment keys:
+Trivial templating for configuration files using environment keys. References to such keys are declared in arbitrary config files either as:
 
-1. Keys are defined as `${key}` in arbitrary configuration files (glob patterns work)
-* Key definitions without a value in the environment results in an error
-* The failure to resolve the supplied glob pattern(s) to at least one file results in an error
-* `ep` can optionally
-	* create backups using the `-b` flag, appending a `.bak` extension to backup copies
-	* output to stdout instead of replacing values in files using the `-d` flag
-	* be verbose about it's operations by using the `-v` flag
-  * `exec()` another command by passing `--` after all arguments to `ep`, the path to the binary and arguments to it, e.g. `/usr/local/ep -v *.conf -- /usr/sbin/nginx -c /etc/nginx.conf`; this can be used to use envplate to parse configs and execute the container process using Dockers `CMD`
+1. `${key}` or
+* `${key:-default value}`
 
-Example:
+Envplate (`ep`) parses arbitrary configuration files (using glob patterns) and replaces all references with values from the environment or with default values (if given). These values replace the keys *inline* (= the files will be changed).
 
-```
-$ cat /etc/foo.conf
-Database=${FOO_DATABASE}
-Mode=fancy
+Failure to resolve the supplied glob pattern(s) to at least one file results in an error.
 
-$ export FOO_DATABASE=db.example.com
+Optionally, `ep` can:
 
-$ ep /etc/f*.conf
+* backup (`-b` flag): create backups of the files it changes, appending a `.bak` extension to backup copies
+* dry-run (`-d` flag): output to stdout instead of replacing values inline
+* strict (`-s` flag): refuse to fallback to default values
+* verbose (`-v` flag): be verbose about it's operations
 
-$ cat /etc/foo.conf
-Database=db.example.com
-Mode=fancy
-```
+`ep` can also `exec()` another command by passing
+
+* `--` after all arguments to `ep`
+* the path to the binary and it's arguments
+
+Example: `/usr/local/bin/ep -v *.conf -- /usr/sbin/nginx -c /etc/nginx.conf`
+
+This can be used to use `ep` to parse configs and execute the container process using Dockers `CMD`
 
 ## Why?
 
@@ -41,4 +39,22 @@ RUN curl -sLo /usr/local/bin/ep https://github.com/yawn/envplate/releases/downlo
 ...
 
 CMD [ "/usr/local/bin/ep", "-v", "/etc/nginx/nginx.conf", "--", "/usr/sbin/nginx", "-c", "/etc/nginx/conf" ]
+```
+
+## Full example 
+
+```
+$ cat /etc/foo.conf
+Database=${FOO_DATABASE}
+DatabaseSlave=${BAR_DATABASE:-db2.example.com}
+Mode=fancy
+
+$ export FOO_DATABASE=db.example.com
+
+$ ep /etc/f*.conf
+
+$ cat /etc/foo.conf
+Database=db.example.com
+DatabaseSlave=db2.example.com
+Mode=fancy
 ```

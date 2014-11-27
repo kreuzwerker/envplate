@@ -1,5 +1,5 @@
 package envplate
 
 var Config struct {
-	Backup, DryRun, Verbose bool
+	Backup, DryRun, Strict, Verbose bool
 }

@@ -41,7 +41,9 @@ func _template(t *testing.T) (string, string) {
 	tpl := `Database1=${DATABASE}
   Mode=${MODE}
   Database2=${DATABASE}
-  Database3=$FOOBAR`
+  Database3=$NOT_A_VARIABLE
+  Database4=${ANOTHER_DATABASE:-db2.example.com}
+  Database5=${DATABASE:-db2.example.com}`
 
 	return _write(t, "parse.txt", tpl, 0644), tpl
 
@@ -117,6 +119,7 @@ func TestFullParse(t *testing.T) {
 
 	Config.Backup = true
 	Config.DryRun = false
+	Config.Strict = false
 	Config.Verbose = true
 
 	ErrorFunc = log.Panicf
@@ -135,7 +138,22 @@ func TestFullParse(t *testing.T) {
 	assert.Equal(`Database1=db.example.com
   Mode=debug
   Database2=db.example.com
-  Database3=$FOOBAR`, _read(t, file))
+  Database3=$NOT_A_VARIABLE
+  Database4=db2.example.com
+  Database5=db.example.com`, _read(t, file))
+
+}
+
+func TestStrictParse(t *testing.T) {
+
+	Config.Strict = true
+
+	ErrorFunc = log.Panicf
+
+	file, _ := _template(t)
+	defer _delete(t, file)
+
+	assert.Panics(t, func() { parse(file) })
 
 }
 
@@ -147,5 +165,30 @@ func TestFilemode(t *testing.T) {
 	mode := filemode(file)
 
 	assert.Equal(t, 0654, mode)
+
+}
+
+func TestCapture(t *testing.T) {
+
+	assert := assert.New(t)
+
+	var tt = []struct {
+		in, v, d string
+	}{
+		{"${FOO}", "FOO", NoDefaultDefined},
+		{"${FOO:-bar}", "FOO", "bar"},
+		{"${FOO:-at the bar}", "FOO", "at the bar"},
+		{"${FOO_3000:-near the bar}", "FOO_3000", "near the bar"},
+		{"${FOO:--1}", "FOO", "-1"},
+	}
+
+	for _, tt := range tt {
+
+		v, d := capture(tt.in)
+
+		assert.Equal(tt.v, v)
+		assert.Equal(tt.d, d)
+
+	}
 
 }

@@ -10,10 +10,11 @@ import (
 )
 
 const (
-	NoKeyDefined = ""
+	NoDefaultDefined = ""
+	NoKeyDefined     = ""
 )
 
-var exp = regexp.MustCompile(`(\$\{\w+\})`)
+var exp = regexp.MustCompile(`\$\{(.+?)(?:\:\-(.+))?\}`)
 
 func Apply(globs []string) {
 
@@ -87,13 +88,28 @@ func parse(file string) error {
 
 	parsed := exp.ReplaceAllStringFunc(string(content), func(match string) string {
 
-		key := match[2 : len(match)-1]
-		value := os.Getenv(key)
-
-		Log(DEBUG, "Expanding reference to '%s' to value '%s'", key, value)
+		var (
+			key, def = capture(match)
+			value    = os.Getenv(key)
+		)
 
 		if value == NoKeyDefined {
-			Log(ERROR, "'%s' requires undeclared environment variable '%s'", file, key)
+
+			if def == NoDefaultDefined {
+				Log(ERROR, "'%s' requires undeclared environment variable '%s', no default is given", file, key)
+			} else {
+
+				if Config.Strict {
+					Log(ERROR, "'%s' requires undeclared environment variable '%s', but cannot use default '%s' (strict-mode)", file, key, def)
+				} else {
+					Log(DEBUG, "'%s' requires undeclared environment variable '%s', using default '%s'", file, key, def)
+					value = def
+				}
+
+			}
+
+		} else {
+			Log(DEBUG, "Expanding reference to '%s' to value '%s'", key, value)
 		}
 
 		return value
@@ -119,6 +135,17 @@ func parse(file string) error {
 	}
 
 	return nil
+
+}
+
+func capture(s string) (key, def string) {
+
+	matches := exp.FindStringSubmatch(s)
+
+	key = matches[1]
+	def = matches[2]
+
+	return key, def
 
 }
 

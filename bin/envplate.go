@@ -6,7 +6,7 @@ import (
 	"os"
 	"syscall"
 
-	env "github.com/yawn/envplate"
+	env "github.com/kreuzwerker/envplate"
 )
 
 var build string

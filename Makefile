@@ -13,7 +13,7 @@ clean:
 
 release:
 	github-release release --user $(USER) --repo $(REPO) --tag $(VERSION) -s $(TOKEN)
-	github-release upload --user $(USER) --repo envplate --tag $(VERSION) -s $(TOKEN) --name ep-osx --file out/darwin/ep
+	github-release upload --user $(USER) --repo $(REPO) --tag $(VERSION) -s $(TOKEN) --name ep-osx --file out/darwin/ep
 	github-release upload --user $(USER) --repo $(REPO) --tag $(VERSION) -s $(TOKEN) --name ep-linux --file out/linux/ep
 
 test:

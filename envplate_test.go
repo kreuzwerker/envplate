@@ -49,6 +49,16 @@ func _template(t *testing.T) (string, string) {
 
 }
 
+func _template_defaults(t *testing.T) (string, string) {
+
+	tpl := `Double1=${DATABASE} Double2=${DATABASE}
+  Double3=${DATABASE:-db2.example.com} Double4=${DATABASE:-db2.example.com}
+  DoubleDefault1=${ANOTHER_DATABASE:-db2-example.com} DoubleDefault2=${ANOTHER_DATABASE:-db2-example.com}`
+
+	return _write(t, "parse.txt", tpl, 0644), tpl
+
+}
+
 func _write(t *testing.T, name, content string, mode os.FileMode) string {
 
 	file, err := ioutil.TempFile("", name)
@@ -141,6 +151,32 @@ func TestFullParse(t *testing.T) {
   Database3=$NOT_A_VARIABLE
   Database4=db2.example.com
   Database5=db.example.com`, _read(t, file))
+
+}
+
+func TestFullParseDefaults(t *testing.T) {
+
+	Config.Backup = true
+	Config.DryRun = false
+	Config.Strict = false
+	Config.Verbose = true
+
+	ErrorFunc = log.Panicf
+
+	assert := assert.New(t)
+
+	file, _ := _template_defaults(t)
+	defer _delete(t, file)
+
+	backup := fmt.Sprintf("%s.bak", file)
+
+	err := parse(file)
+
+	assert.NoError(err)
+	assert.True(_exists(backup))
+	assert.Equal(`Double1=db.example.com Double2=db.example.com
+  Double3=db.example.com Double4=db.example.com
+  DoubleDefault1=db2-example.com DoubleDefault2=db2-example.com`, _read(t, file))
 
 }
 

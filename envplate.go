@@ -14,7 +14,9 @@ const (
 	NoKeyDefined     = ""
 )
 
-var exp = regexp.MustCompile(`\$\{(.+?)(?:\:\-(.+))?\}`)
+//var exp = regexp.MustCompile(`\$\{(.+?)(?:\:\-(.+))?\}`)
+var exp = regexp.MustCompile(`(?:\$\{(.+?)\})`)
+var subexp = regexp.MustCompile(`(?:(.+?)\:\-(.+))?`)
 
 func Apply(globs []string) {
 
@@ -143,7 +145,13 @@ func capture(s string) (key, def string) {
 	matches := exp.FindStringSubmatch(s)
 
 	key = matches[1]
-	def = matches[2]
+	def = ""
+	default_matches := subexp.FindStringSubmatch(key)
+
+	if default_matches[2] != NoDefaultDefined {
+		key = default_matches[1]
+		def = default_matches[2]
+	}
 
 	return key, def
 

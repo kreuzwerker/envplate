@@ -53,6 +53,7 @@ func _template_defaults(t *testing.T) (string, string) {
 
 	tpl := `Double1=${DATABASE} Double2=${DATABASE}
   Double3=${DATABASE:-db2.example.com} Double4=${DATABASE:-db2.example.com}
+  DoubleE3=${ANOTHER_DATABASE:- } DoubleE4=${ANOTHER_DATABASE:- }
   DoubleDefault1=${ANOTHER_DATABASE:-db2-example.com} DoubleDefault2=${ANOTHER_DATABASE:-db2-example.com}`
 
 	return _write(t, "parse.txt", tpl, 0644), tpl
@@ -176,6 +177,7 @@ func TestFullParseDefaults(t *testing.T) {
 	assert.True(_exists(backup))
 	assert.Equal(`Double1=db.example.com Double2=db.example.com
   Double3=db.example.com Double4=db.example.com
+  DoubleE3=  DoubleE4= 
   DoubleDefault1=db2-example.com DoubleDefault2=db2-example.com`, _read(t, file))
 
 }

@@ -14,7 +14,7 @@ const (
 	NoKeyDefined     = ""
 )
 
-var exp = regexp.MustCompile(`\$\{(.+?)(?:\:\-(.+))?\}`)
+var exp = regexp.MustCompile(`\$\{(.+?)(?:\:\-(.+?))?\}`)
 
 func Apply(globs []string) {
 

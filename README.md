@@ -34,7 +34,7 @@ For apps running Docker which rely (fully or partially) on configuration files i
 You can directly download envplate binaries into your Dockerfile using Github releases like this:
 
 ```
-RUN curl -sLo /usr/local/bin/ep https://github.com/kreuzwerker/envplate/releases/download/v0.0.4/ep-linux && chmod +x /usr/local/bin/ep
+RUN curl -sLo /usr/local/bin/ep https://github.com/kreuzwerker/envplate/releases/download/v0.0.5/ep-linux && chmod +x /usr/local/bin/ep
 
 ...
 

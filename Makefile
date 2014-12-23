@@ -1,7 +1,7 @@
 TOKEN = `cat .token`
 REPO := envplate
 USER := kreuzwerker
-VERSION := "v0.0.4"
+VERSION := "v0.0.5"
 
 build:
 	mkdir -p out/darwin out/linux

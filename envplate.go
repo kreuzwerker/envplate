@@ -154,7 +154,7 @@ func filemode(file string) os.FileMode {
 	fileinfo, err := os.Stat(file)
 
 	if err != nil {
-		Log(ERROR, "Cannot state '%s': %v", file, err)
+		Log(ERROR, "Cannot stat '%s': %v", file, err)
 	}
 
 	return fileinfo.Mode()

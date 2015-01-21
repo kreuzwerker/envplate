@@ -38,7 +38,7 @@ RUN curl -sLo /usr/local/bin/ep https://github.com/kreuzwerker/envplate/releases
 
 ...
 
-CMD [ "/usr/local/bin/ep", "-v", "/etc/nginx/nginx.conf", "--", "/usr/sbin/nginx", "-c", "/etc/nginx/conf" ]
+CMD [ "/usr/local/bin/ep", "-v", "/etc/nginx/nginx.conf", "--", "/usr/sbin/nginx", "-c", "/etc/nginx/nginx.conf" ]
 ```
 
 ## Full example

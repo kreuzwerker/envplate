@@ -3,9 +3,9 @@ REPO := envplate
 USER := kreuzwerker
 VERSION := "v0.0.4"
 
-build: mac linux
+build: darwin linux
 
-mac:
+darwin:
 	mkdir -p out/darwin
 	GOOS=darwin go build -o out/darwin/ep -ldflags "-X main.build `git rev-parse --short HEAD`" bin/envplate.go
 linux:

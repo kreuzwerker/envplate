@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -108,20 +109,33 @@ func TestCreateBackup(t *testing.T) {
 
 func TestApplyNoGlobs(t *testing.T) {
 
+	assert := assert.New(t)
+
 	var buf bytes.Buffer
 
 	ErrorFunc = func(format string, args ...interface{}) {
 		fmt.Fprintf(&buf, format, args...)
 	}
 
+	tempdir, err := ioutil.TempDir("", "")
+	assert.NoError(err)
+
+	defer os.Remove(tempdir)
+
 	globs := []string{
-		"*.not-here",
-		"*.not-there",
+		tempdir,
+		filepath.Join(tempdir, "*.not-here"),
+		filepath.Join(tempdir, "*.not-there"),
 	}
 
 	Apply(globs)
 
-	assert.Equal(t, "[ ERROR ] Zero files matched passed globs '[*.not-here *.not-there]'", buf.String())
+	msg := fmt.Sprintf("[ ERROR ] Zero files matched passed globs '[%s %s %s]'",
+		globs[0],
+		globs[1],
+		globs[2])
+
+	assert.Equal(msg, buf.String())
 
 }
 

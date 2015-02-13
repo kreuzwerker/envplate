@@ -30,6 +30,10 @@ func Apply(globs []string) {
 
 		for _, name := range files {
 
+			if info, _ := os.Stat(name); info.IsDir() {
+				continue
+			}
+
 			matches = true
 
 			if err := parse(name); err != nil {

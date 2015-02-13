@@ -214,7 +214,7 @@ func TestFilemode(t *testing.T) {
 
 	mode := filemode(file)
 
-	assert.Equal(t, 0654, mode)
+	assert.Equal(t, "-rw-r-xr--", mode.String())
 
 }
 

@@ -60,6 +60,16 @@ func _template_defaults(t *testing.T) (string, string) {
 
 }
 
+func _template_escaping(t *testing.T) (string, string) {
+
+	tpl := `${DATABASE}
+  Escaped1=\${DATABASE} EscapedDefault1=\${DATABASE:-escaped}
+  Escaped2=\\${DATABASE} EscapedDefault2=\\${DATABASE:-escaped}`
+
+	return _write(t, "parse.txt", tpl, 0644), tpl
+
+}
+
 func _write(t *testing.T, name, content string, mode os.FileMode) string {
 
 	file, err := ioutil.TempFile("", name)
@@ -191,6 +201,32 @@ func TestFullParseDefaults(t *testing.T) {
 	assert.Equal(`Double1=db.example.com Double2=db.example.com
   Double3=db.example.com Double4=db.example.com
   DoubleDefault1=db2-example.com DoubleDefault2=db2-example.com`, _read(t, file))
+
+}
+
+func TestFullParseEscapes(t *testing.T) {
+
+	Config.Backup = true
+	Config.DryRun = false
+	Config.Strict = false
+	Config.Verbose = true
+
+	ErrorFunc = log.Panicf
+
+	assert := assert.New(t)
+
+	file, _ := _template_escaping(t)
+	defer _delete(t, file)
+
+	backup := fmt.Sprintf("%s.bak", file)
+
+	err := parse(file)
+
+	assert.NoError(err)
+	assert.True(_exists(backup))
+	assert.Equal(`db.example.com
+  Escaped1=${DATABASE} EscapedDefault1=${DATABASE:-escaped}
+  Escaped2=\${DATABASE} EscapedDefault2=\${DATABASE:-escaped}`, _read(t, file))
 
 }
 

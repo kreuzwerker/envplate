@@ -14,7 +14,7 @@ const (
 	NoKeyDefined     = ""
 )
 
-var exp = regexp.MustCompile(`\$\{(.+?)(?:\:\-(.+?))?\}`)
+var exp = regexp.MustCompile(`(.?)\$\{(.+?)(?:\:\-(.+?))?\}`)
 
 func Apply(globs []string) {
 
@@ -93,9 +93,15 @@ func parse(file string) error {
 	parsed := exp.ReplaceAllStringFunc(string(content), func(match string) string {
 
 		var (
-			key, def = capture(match)
+			pre, key, def = capture(match)
 			value    = os.Getenv(key)
 		)
+
+                if pre == `\` {
+
+                  return match[1:len(match)]
+
+                }
 
 		if value == NoKeyDefined {
 
@@ -116,7 +122,7 @@ func parse(file string) error {
 			Log(DEBUG, "Expanding reference to '%s' to value '%s'", key, value)
 		}
 
-		return value
+		return pre + value
 
 	})
 
@@ -142,14 +148,15 @@ func parse(file string) error {
 
 }
 
-func capture(s string) (key, def string) {
+func capture(s string) (pre, key, def string) {
 
 	matches := exp.FindStringSubmatch(s)
 
-	key = matches[1]
-	def = matches[2]
+        pre = matches[1]
+	key = matches[2]
+	def = matches[3]
 
-	return key, def
+	return pre, key, def
 
 }
 

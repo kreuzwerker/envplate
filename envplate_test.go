@@ -223,20 +223,21 @@ func TestCapture(t *testing.T) {
 	assert := assert.New(t)
 
 	var tt = []struct {
-		in, v, d string
+		in, p, v, d string
 	}{
-		{"${FOO}", "FOO", NoDefaultDefined},
-		{"${FOO:-bar}", "FOO", "bar"},
-		{"${FOO:-at the bar}", "FOO", "at the bar"},
-		{"${FOO_3000:-near the bar}", "FOO_3000", "near the bar"},
-		{"${FOO:--1}", "FOO", "-1"},
-		{"${FOO:-http://www.example.com/bar/gar/war?a=b}", "FOO", "http://www.example.com/bar/gar/war?a=b"},
+		{"${FOO}", "", "FOO", NoDefaultDefined},
+		{"${FOO:-bar}", "", "FOO", "bar"},
+		{"${FOO:-at the bar}", "", "FOO", "at the bar"},
+		{"${FOO_3000:-near the bar}", "", "FOO_3000", "near the bar"},
+		{"${FOO:--1}", "", "FOO", "-1"},
+		{"${FOO:-http://www.example.com/bar/gar/war?a=b}", "", "FOO", "http://www.example.com/bar/gar/war?a=b"},
 	}
 
 	for _, tt := range tt {
 
-		v, d := capture(tt.in)
+		p, v, d := capture(tt.in)
 
+                assert.Equal(tt.p, p)
 		assert.Equal(tt.v, v)
 		assert.Equal(tt.d, d)
 

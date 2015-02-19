@@ -60,6 +60,16 @@ func _template_defaults(t *testing.T) (string, string) {
 
 }
 
+func _template_escaping(t *testing.T) (string, string) {
+
+	tpl := `${DATABASE}
+  Escaped1=\${DATABASE} EscapedDefault1=\${DATABASE:-escaped}
+  Escaped2=\\${DATABASE} EscapedDefault2=\\${DATABASE:-escaped}`
+
+	return _write(t, "parse.txt", tpl, 0644), tpl
+
+}
+
 func _write(t *testing.T, name, content string, mode os.FileMode) string {
 
 	file, err := ioutil.TempFile("", name)
@@ -194,6 +204,32 @@ func TestFullParseDefaults(t *testing.T) {
 
 }
 
+func TestFullParseEscapes(t *testing.T) {
+
+	Config.Backup = true
+	Config.DryRun = false
+	Config.Strict = false
+	Config.Verbose = true
+
+	ErrorFunc = log.Panicf
+
+	assert := assert.New(t)
+
+	file, _ := _template_escaping(t)
+	defer _delete(t, file)
+
+	backup := fmt.Sprintf("%s.bak", file)
+
+	err := parse(file)
+
+	assert.NoError(err)
+	assert.True(_exists(backup))
+	assert.Equal(`db.example.com
+  Escaped1=${DATABASE} EscapedDefault1=${DATABASE:-escaped}
+  Escaped2=\${DATABASE} EscapedDefault2=\${DATABASE:-escaped}`, _read(t, file))
+
+}
+
 func TestStrictParse(t *testing.T) {
 
 	Config.Strict = true
@@ -223,20 +259,24 @@ func TestCapture(t *testing.T) {
 	assert := assert.New(t)
 
 	var tt = []struct {
-		in, v, d string
+		in, p, v, d string
 	}{
-		{"${FOO}", "FOO", NoDefaultDefined},
-		{"${FOO:-bar}", "FOO", "bar"},
-		{"${FOO:-at the bar}", "FOO", "at the bar"},
-		{"${FOO_3000:-near the bar}", "FOO_3000", "near the bar"},
-		{"${FOO:--1}", "FOO", "-1"},
-		{"${FOO:-http://www.example.com/bar/gar/war?a=b}", "FOO", "http://www.example.com/bar/gar/war?a=b"},
+		{"${FOO}", "", "FOO", NoDefaultDefined},
+		{"${FOO:-bar}", "", "FOO", "bar"},
+		{"${FOO:-at the bar}", "", "FOO", "at the bar"},
+		{"${FOO_3000:-near the bar}", "", "FOO_3000", "near the bar"},
+		{"${FOO:--1}", "", "FOO", "-1"},
+		{"${FOO:-http://www.example.com/bar/gar/war?a=b}", "", "FOO", "http://www.example.com/bar/gar/war?a=b"},
+		{`\${FOO}`, `\`, "FOO", NoDefaultDefined},
+                {`\\${FOO:-bar}`, `\`, "FOO", "bar"},
+		{"foo${FOO}", "o", "FOO", NoDefaultDefined},
 	}
 
 	for _, tt := range tt {
 
-		v, d := capture(tt.in)
+		p, v, d := capture(tt.in)
 
+                assert.Equal(tt.p, p)
 		assert.Equal(tt.v, v)
 		assert.Equal(tt.d, d)
 

@@ -63,8 +63,12 @@ func _template_defaults(t *testing.T) (string, string) {
 func _template_escaping(t *testing.T) (string, string) {
 
 	tpl := `${DATABASE}
-  Escaped1=\${DATABASE} EscapedDefault1=\${DATABASE:-escaped}
-  Escaped2=\\${DATABASE} EscapedDefault2=\\${DATABASE:-escaped}`
+  Escaped1=\${DATABASE} EscapedDefault1=\${DATABASE:-db2.example.com} EscapedDefaultReplaced1=\${ANOTHER_DATABASE:-db2.example.com}
+  NoEscape1=\\${DATABASE} NoEscapeDefault1=\\${DATABASE:-db2.example.com} NoEscapeDefaultReplaced1=\\${ANOTHER_DATABASE:-db2.example.com}
+  Escaped2=\\\${DATABASE} EscapedDefault2=\\\${DATABASE:-db2.example.com} EscapedDefaultReplaced2=\\\${ANOTHER_DATABASE:-db2.example.com}
+  NoEscape2=\\\\${DATABASE} NoEscapeDefault2=\\\\${DATABASE:-db2.example.com} NoEscapeDefaultReplaced2=\\\\${ANOTHER_DATABASE:-db2.example.com}
+  Escaped3=\\\\\${DATABASE} EscapedDefault3=\\\\\${DATABASE:-db2.example.com} EscapedDefaultReplaced3=\\\\\${ANOTHER_DATABASE:-db2.example.com}
+  NoEscape3=\\\\\\${DATABASE} NoEscapeDefault3=\\\\\\${DATABASE:-db2.example.com} NoEscapeDefaultReplaced3=\\\\\\${ANOTHER_DATABASE:-db2.example.com}`
 
 	return _write(t, "parse.txt", tpl, 0644), tpl
 
@@ -225,8 +229,12 @@ func TestFullParseEscapes(t *testing.T) {
 	assert.NoError(err)
 	assert.True(_exists(backup))
 	assert.Equal(`db.example.com
-  Escaped1=${DATABASE} EscapedDefault1=${DATABASE:-escaped}
-  Escaped2=\${DATABASE} EscapedDefault2=\${DATABASE:-escaped}`, _read(t, file))
+  Escaped1=${DATABASE} EscapedDefault1=${DATABASE:-db2.example.com} EscapedDefaultReplaced1=${ANOTHER_DATABASE:-db2.example.com}
+  NoEscape1=\db.example.com NoEscapeDefault1=\db.example.com NoEscapeDefaultReplaced1=\db2.example.com
+  Escaped2=\${DATABASE} EscapedDefault2=\${DATABASE:-db2.example.com} EscapedDefaultReplaced2=\${ANOTHER_DATABASE:-db2.example.com}
+  NoEscape2=\\db.example.com NoEscapeDefault2=\\db.example.com NoEscapeDefaultReplaced2=\\db2.example.com
+  Escaped3=\\${DATABASE} EscapedDefault3=\\${DATABASE:-db2.example.com} EscapedDefaultReplaced3=\\${ANOTHER_DATABASE:-db2.example.com}
+  NoEscape3=\\\db.example.com NoEscapeDefault3=\\\db.example.com NoEscapeDefaultReplaced3=\\\db2.example.com`, _read(t, file))
 
 }
 
@@ -259,7 +267,7 @@ func TestCapture(t *testing.T) {
 	assert := assert.New(t)
 
 	var tt = []struct {
-		in, p, v, d string
+		in, e, v, d string
 	}{
 		{"${FOO}", "", "FOO", NoDefaultDefined},
 		{"${FOO:-bar}", "", "FOO", "bar"},
@@ -268,15 +276,17 @@ func TestCapture(t *testing.T) {
 		{"${FOO:--1}", "", "FOO", "-1"},
 		{"${FOO:-http://www.example.com/bar/gar/war?a=b}", "", "FOO", "http://www.example.com/bar/gar/war?a=b"},
 		{`\${FOO}`, `\`, "FOO", NoDefaultDefined},
-                {`\\${FOO:-bar}`, `\`, "FOO", "bar"},
-		{"foo${FOO}", "o", "FOO", NoDefaultDefined},
+		{`\\${FOO:-bar}`, `\\`, "FOO", "bar"},
+		{`\\\${FOO:-bar}`, `\\\`, "FOO", "bar"},
+		{`\\\\${FOO:-bar}`, `\\\\`, "FOO", "bar"},
+		{"foo${FOO}", "", "FOO", NoDefaultDefined},
 	}
 
 	for _, tt := range tt {
 
-		p, v, d := capture(tt.in)
+		e, v, d := capture(tt.in)
 
-                assert.Equal(tt.p, p)
+		assert.Equal(tt.e, e)
 		assert.Equal(tt.v, v)
 		assert.Equal(tt.d, d)
 

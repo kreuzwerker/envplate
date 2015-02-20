@@ -293,3 +293,31 @@ func TestCapture(t *testing.T) {
 	}
 
 }
+
+func TestEscape(t *testing.T) {
+
+	assert := assert.New(t)
+
+	var tt = []struct {
+		in, e string
+	}{
+		{`foo`, NotAnEscapeSequence},
+		{`${FOO}`, NotAnEscapeSequence},
+		{`\${FOO}`, `${FOO}`},
+		{`\\${FOO}`, NotAnEscapeSequence},
+		{`\\\${FOO:-bar}`, `\${FOO:-bar}`},
+		{`\\\\${FOO}`, NotAnEscapeSequence},
+		{`\\\\\${FOO}`, `\\${FOO}`},
+		{`\\\\\\${FOO}`, NotAnEscapeSequence},
+		{`\\\\\\\${FOO:-bar}`, `\\\${FOO:-bar}`},
+	}
+
+	for _, tt := range tt {
+
+		esc := escape(tt.in)
+
+		assert.Equal(tt.e, esc)
+
+	}
+
+}

@@ -10,11 +10,12 @@ import (
 )
 
 const (
-	NoDefaultDefined = ""
-	NoKeyDefined     = ""
+	NoDefaultDefined    = ""
+	NoKeyDefined        = ""
+	NotAnEscapeSequence = ""
 )
 
-var exp = regexp.MustCompile(`\$\{(.+?)(?:\:\-(.+?))?\}`)
+var exp = regexp.MustCompile(`(\\*)\$\{(.+?)(?:\:\-(.+?))?\}`)
 
 func Apply(globs []string) {
 
@@ -93,9 +94,23 @@ func parse(file string) error {
 	parsed := exp.ReplaceAllStringFunc(string(content), func(match string) string {
 
 		var (
-			key, def = capture(match)
-			value    = os.Getenv(key)
+			esc, key, def = capture(match)
+			value         = os.Getenv(key)
 		)
+
+		if len(esc)%2 == 1 {
+
+			escaped := escape(match)
+
+			if escaped == NotAnEscapeSequence {
+
+				Log(ERROR, "Tried to escape '%s', but was no escape sequence")
+
+			}
+
+			return escaped
+
+		}
 
 		if value == NoKeyDefined {
 
@@ -114,6 +129,12 @@ func parse(file string) error {
 
 		} else {
 			Log(DEBUG, "Expanding reference to '%s' to value '%s'", key, value)
+		}
+
+		if len(esc) > 0 {
+
+			value = esc[:len(esc)/2] + value
+
 		}
 
 		return value
@@ -142,14 +163,15 @@ func parse(file string) error {
 
 }
 
-func capture(s string) (key, def string) {
+func capture(s string) (esc, key, def string) {
 
 	matches := exp.FindStringSubmatch(s)
 
-	key = matches[1]
-	def = matches[2]
+	esc = matches[1]
+	key = matches[2]
+	def = matches[3]
 
-	return key, def
+	return esc, key, def
 
 }
 
@@ -162,5 +184,34 @@ func filemode(file string) os.FileMode {
 	}
 
 	return fileinfo.Mode()
+
+}
+
+func escape(s string) (escaped string) {
+
+	expEscaped := regexp.MustCompile(`(\\+)(.*)`)
+	matches := expEscaped.FindStringSubmatch(s)
+
+	if matches == nil {
+
+		return NotAnEscapeSequence
+
+	}
+
+	bss := matches[1]
+
+	if len(bss)%2 != 1 {
+
+		return NotAnEscapeSequence
+
+	}
+
+	parsedBss := bss[:len(bss)-1][:(len(bss)-1)/2]
+
+	escaped = parsedBss + matches[2]
+
+	Log(DEBUG, "Substituting escaped sequence '%s' with '%s'", s, escaped)
+
+	return escaped
 
 }

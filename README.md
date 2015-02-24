@@ -27,6 +27,12 @@ Example: `/usr/local/bin/ep -v *.conf -- /usr/sbin/nginx -c /etc/nginx.conf`
 
 This can be used to use `ep` to parse configs and execute the container process using Dockers `CMD`
 
+## Escaping
+
+In case the file you want to modify already uses the pattern envplate is searching for ( e.g. for reading environment variables ) you can escape the sequence by adding a leading backslash `\`. It's also possible to escape a leading backslash by adding an additional backslash. Basically a sequence with an even number of leading backslashes will be parsed, is the number of leading backslashes odd the sequence will be escaped.
+
+See https://github.com/kreuzwerker/envplate#full-example
+
 ## Why?
 
 For apps running Docker which rely (fully or partially) on configuration files instead of being purely configured through environment variables.
@@ -48,6 +54,10 @@ $ cat /etc/foo.conf
 Database=${FOO_DATABASE}
 DatabaseSlave=${BAR_DATABASE:-db2.example.com}
 Mode=fancy
+Escaped1=\${FOO_DATABASE}
+NotEscaped1=\\${FOO_DATABASE}
+Escaped2=\\\${BAR_DATABASE:-db2.example.com}
+NotEscaped2=\\\\${BAR_DATABASE:-db2.example.com}
 
 $ export FOO_DATABASE=db.example.com
 
@@ -57,4 +67,8 @@ $ cat /etc/foo.conf
 Database=db.example.com
 DatabaseSlave=db2.example.com
 Mode=fancy
+Escaped1=${FOO_DATABASE}
+NotEscaped1=\db.example.com
+Escaped2=\${BAR_DATABASE:-db2.example.com}
+NotEscaped2=\\db2.example.com
 ```

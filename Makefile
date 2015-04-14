@@ -1,7 +1,7 @@
 TOKEN = `cat .token`
 REPO := envplate
 USER := kreuzwerker
-VERSION := "v0.0.6"
+VERSION := "v0.0.7"
 
 build: darwin linux
 

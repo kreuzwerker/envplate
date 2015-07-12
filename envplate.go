@@ -7,11 +7,11 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 )
 
 const (
 	NoDefaultDefined    = ""
-	NoKeyDefined        = ""
 	NotAnEscapeSequence = ""
 )
 
@@ -83,6 +83,7 @@ func createBackup(file string) error {
 
 func parse(file string) error {
 
+	env := envmap()
 	content, err := ioutil.ReadFile(file)
 
 	if err != nil {
@@ -94,8 +95,8 @@ func parse(file string) error {
 	parsed := exp.ReplaceAllStringFunc(string(content), func(match string) string {
 
 		var (
-			esc, key, def = capture(match)
-			value         = os.Getenv(key)
+			esc, key, def     = capture(match)
+			value, keyDefined = env[key]
 		)
 
 		if len(esc)%2 == 1 {
@@ -112,7 +113,7 @@ func parse(file string) error {
 
 		}
 
-		if value == NoKeyDefined {
+		if !keyDefined {
 
 			if def == NoDefaultDefined {
 				Log(ERROR, "'%s' requires undeclared environment variable '%s', no default is given", file, key)
@@ -132,9 +133,7 @@ func parse(file string) error {
 		}
 
 		if len(esc) > 0 {
-
 			value = esc[:len(esc)/2] + value
-
 		}
 
 		return value
@@ -175,18 +174,6 @@ func capture(s string) (esc, key, def string) {
 
 }
 
-func filemode(file string) os.FileMode {
-
-	fileinfo, err := os.Stat(file)
-
-	if err != nil {
-		Log(ERROR, "Cannot stat '%s': %v", file, err)
-	}
-
-	return fileinfo.Mode()
-
-}
-
 func escape(s string) (escaped string) {
 
 	expEscaped := regexp.MustCompile(`(\\+)(.*)`)
@@ -213,5 +200,36 @@ func escape(s string) (escaped string) {
 	Log(DEBUG, "Substituting escaped sequence '%s' with '%s'", s, escaped)
 
 	return escaped
+
+}
+
+func envmap() (m map[string]string) {
+
+	m = make(map[string]string)
+
+	for _, e := range os.Environ() {
+
+		s := strings.Split(e, "=")
+
+		key := s[0]
+		val := strings.Join(s[1:], "=")
+
+		m[key] = val
+
+	}
+
+	return
+
+}
+
+func filemode(file string) os.FileMode {
+
+	fileinfo, err := os.Stat(file)
+
+	if err != nil {
+		Log(ERROR, "Cannot stat '%s': %v", file, err)
+	}
+
+	return fileinfo.Mode()
 
 }

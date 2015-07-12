@@ -41,6 +41,7 @@ func _template(t *testing.T) (string, string) {
 
 	tpl := `Database1=${DATABASE}
   Mode=${MODE}
+  Null=${NULL}
   Database2=${DATABASE}
   Database3=$NOT_A_VARIABLE
   Database4=${ANOTHER_DATABASE:-db2.example.com}
@@ -175,6 +176,7 @@ func TestFullParse(t *testing.T) {
 	assert.True(_exists(backup))
 	assert.Equal(`Database1=db.example.com
   Mode=debug
+  Null=
   Database2=db.example.com
   Database3=$NOT_A_VARIABLE
   Database4=db2.example.com

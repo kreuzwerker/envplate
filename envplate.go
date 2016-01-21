@@ -13,9 +13,10 @@ import (
 const (
 	NoDefaultDefined    = ""
 	NotAnEscapeSequence = ""
+	DefaultValueSyntax  = ":-"
 )
 
-var exp = regexp.MustCompile(`(\\*)\$\{(.+?)(?:\:\-(.+?))?\}`)
+var exp = regexp.MustCompile(`(\\*)\$\{(.+?)(?:(\:\-)(.*?))?\}`)
 
 func Apply(globs []string) {
 
@@ -95,7 +96,7 @@ func parse(file string) error {
 	parsed := exp.ReplaceAllStringFunc(string(content), func(match string) string {
 
 		var (
-			esc, key, def     = capture(match)
+			esc, key, sep, def     = capture(match)
 			value, keyDefined = env[key]
 		)
 
@@ -115,7 +116,7 @@ func parse(file string) error {
 
 		if !keyDefined {
 
-			if def == NoDefaultDefined {
+			if sep == NoDefaultDefined {
 				Log(ERROR, "'%s' requires undeclared environment variable '%s', no default is given", file, key)
 			} else {
 
@@ -162,15 +163,16 @@ func parse(file string) error {
 
 }
 
-func capture(s string) (esc, key, def string) {
+func capture(s string) (esc, key, sep, def string) {
 
 	matches := exp.FindStringSubmatch(s)
 
 	esc = matches[1]
 	key = matches[2]
-	def = matches[3]
+	sep = matches[3]
+	def = matches[4]
 
-	return esc, key, def
+	return esc, key, sep, def
 
 }
 

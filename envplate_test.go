@@ -55,7 +55,8 @@ func _template_defaults(t *testing.T) (string, string) {
 
 	tpl := `Double1=${DATABASE} Double2=${DATABASE}
   Double3=${DATABASE:-db2.example.com} Double4=${DATABASE:-db2.example.com}
-  DoubleDefault1=${ANOTHER_DATABASE:-db2-example.com} DoubleDefault2=${ANOTHER_DATABASE:-db2-example.com}`
+  DoubleDefault1=${ANOTHER_DATABASE:-db2-example.com} DoubleDefault2=${ANOTHER_DATABASE:-db2-example.com}
+  EmptyDefault=${UNDEFINED_VARIABLE:-}`
 
 	return _write(t, "parse.txt", tpl, 0644), tpl
 
@@ -206,7 +207,8 @@ func TestFullParseDefaults(t *testing.T) {
 	assert.True(_exists(backup))
 	assert.Equal(`Double1=db.example.com Double2=db.example.com
   Double3=db.example.com Double4=db.example.com
-  DoubleDefault1=db2-example.com DoubleDefault2=db2-example.com`, _read(t, file))
+  DoubleDefault1=db2-example.com DoubleDefault2=db2-example.com
+  EmptyDefault=`, _read(t, file))
 
 }
 
@@ -269,27 +271,28 @@ func TestCapture(t *testing.T) {
 	assert := assert.New(t)
 
 	var tt = []struct {
-		in, e, v, d string
+		in, e, v, s, d string
 	}{
-		{"${FOO}", "", "FOO", NoDefaultDefined},
-		{"${FOO:-bar}", "", "FOO", "bar"},
-		{"${FOO:-at the bar}", "", "FOO", "at the bar"},
-		{"${FOO_3000:-near the bar}", "", "FOO_3000", "near the bar"},
-		{"${FOO:--1}", "", "FOO", "-1"},
-		{"${FOO:-http://www.example.com/bar/gar/war?a=b}", "", "FOO", "http://www.example.com/bar/gar/war?a=b"},
-		{`\${FOO}`, `\`, "FOO", NoDefaultDefined},
-		{`\\${FOO:-bar}`, `\\`, "FOO", "bar"},
-		{`\\\${FOO:-bar}`, `\\\`, "FOO", "bar"},
-		{`\\\\${FOO:-bar}`, `\\\\`, "FOO", "bar"},
-		{"foo${FOO}", "", "FOO", NoDefaultDefined},
+		{"${FOO}", "", "FOO", NoDefaultDefined, NoDefaultDefined},
+		{"${FOO:-bar}", "", "FOO", ":-", "bar"},
+		{"${FOO:-at the bar}", "", "FOO", ":-", "at the bar"},
+		{"${FOO_3000:-near the bar}", "", "FOO_3000", ":-", "near the bar"},
+		{"${FOO:--1}", "", "FOO", ":-", "-1"},
+		{"${FOO:-http://www.example.com/bar/gar/war?a=b}", "", "FOO", ":-", "http://www.example.com/bar/gar/war?a=b"},
+		{`\${FOO}`, `\`, "FOO", NoDefaultDefined, NoDefaultDefined},
+		{`\\${FOO:-bar}`, `\\`, "FOO", ":-", "bar"},
+		{`\\\${FOO:-bar}`, `\\\`, "FOO", ":-", "bar"},
+		{`\\\\${FOO:-bar}`, `\\\\`, "FOO", ":-", "bar"},
+		{"foo${FOO}", "", "FOO", NoDefaultDefined, NoDefaultDefined},
 	}
 
 	for _, tt := range tt {
 
-		e, v, d := capture(tt.in)
+		e, v, s, d := capture(tt.in)
 
 		assert.Equal(tt.e, e)
 		assert.Equal(tt.v, v)
+		assert.Equal(tt.s, s)
 		assert.Equal(tt.d, d)
 
 	}

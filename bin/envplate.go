@@ -7,13 +7,14 @@ import (
 	"syscall"
 
 	env "github.com/kreuzwerker/envplate"
+	"github.com/yawn/doubledash"
 )
 
 var build string
 
 func main() {
 
-	flagArgs, execArgs := env.SplitArgs()
+	flagArgs, execArgs := doubledash.Args, doubledash.Xtra
 	os.Args = flagArgs
 
 	var (

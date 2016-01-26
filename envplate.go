@@ -7,7 +7,8 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"strings"
+
+	"github.com/yawn/envmap"
 )
 
 const (
@@ -84,7 +85,7 @@ func createBackup(file string) error {
 
 func parse(file string) error {
 
-	env := envmap()
+	env := envmap.Import()
 	content, err := ioutil.ReadFile(file)
 
 	if err != nil {
@@ -202,25 +203,6 @@ func escape(s string) (escaped string) {
 	Log(DEBUG, "Substituting escaped sequence '%s' with '%s'", s, escaped)
 
 	return escaped
-
-}
-
-func envmap() (m map[string]string) {
-
-	m = make(map[string]string)
-
-	for _, e := range os.Environ() {
-
-		s := strings.Split(e, "=")
-
-		key := s[0]
-		val := strings.Join(s[1:], "=")
-
-		m[key] = val
-
-	}
-
-	return
 
 }
 

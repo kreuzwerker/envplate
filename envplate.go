@@ -96,8 +96,8 @@ func parse(file string) error {
 	parsed := exp.ReplaceAllStringFunc(string(content), func(match string) string {
 
 		var (
-			esc, key, sep, def     = capture(match)
-			value, keyDefined = env[key]
+			esc, key, sep, def = capture(match)
+			value, keyDefined  = env[key]
 		)
 
 		if len(esc)%2 == 1 {
@@ -142,7 +142,10 @@ func parse(file string) error {
 	})
 
 	if Config.DryRun {
-		Log(INFO, "Expanding all references in '%s' would look like this:\n%s", file, parsed)
+		Log(INFO, "Successfully expanding all references into stdout")
+
+		fmt.Print(parsed)
+
 	} else {
 
 		if Config.Backup {

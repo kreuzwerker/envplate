@@ -1,66 +1,60 @@
 package envplate
 
 import (
-	"bytes"
-	"log"
-	"os"
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func _redirect_logs(f func(func() string)) {
-
-	var buf bytes.Buffer
-
-	log.SetOutput(&buf)
-
-	logs := func() string {
-
-		logs := buf.String()
-		buf.Reset()
-
-		return logs
-
-	}
-
-	f(logs)
-
-	log.SetOutput(os.Stderr)
-
-}
-
 func TestLog(t *testing.T) {
 
-	Config.Verbose = false
+	reset := func(v bool) {
+		Logger.Verbose = v
+	}
 
-	ErrorFunc = log.Panicf
+	defer reset(Logger.Verbose)
+	reset(false)
 
-	_redirect_logs(func(logs func() string) {
+	_redirect_logs(func(logs func() string, raw func() string) {
 
 		assert := assert.New(t)
 
-		Log(DEBUG, "Hello debug world")
+		err := Log(RAW, "Hello raw world")
+		assert.NoError(err)
+		assert.Empty(logs())
+		assert.Equal(raw(), "Hello raw world")
+
+		err = Log(DEBUG, "Hello debug world")
+		assert.NoError(err)
 		assert.Empty(logs())
 
-		Log(INFO, "Hello info world")
+		err = Log(INFO, "Hello info world")
+		assert.NoError(err)
 		assert.NotEmpty(logs())
 
-		assert.Panics(func() { Log(ERROR, "Hello error world") })
+		err = Log(ERROR, "Hello error world")
+		assert.Error(err)
+		assert.Equal(errors.New("Hello error world"), err)
 		assert.NotEmpty(logs())
 
-		Config.Verbose = true
+		Logger.Verbose = true
 
-		Log(DEBUG, "Hello debug world")
+		err = Log(DEBUG, "Hello debug world")
+		assert.NoError(err)
 		assert.Regexp(".+ \\[ DEBUG \\] Hello debug world", logs())
 
-		Log(DEBUG, "Hello %s %s", "debug", "world")
+		err = Log(DEBUG, "Hello %s %s", "debug", "world")
+		assert.NoError(err)
 		assert.Regexp(".+ \\[ DEBUG \\] Hello debug world", logs())
 
-		Log(INFO, "Hello info world")
+		err = Log(INFO, "Hello info world")
+		assert.NoError(err)
 		assert.Regexp(".+ \\[ INFO \\] Hello info world", logs())
 
-		assert.Panics(func() { Log(ERROR, "Hello error world") })
+		err = Log(ERROR, "Hello error world")
+		assert.Error(err)
+		assert.Equal(errors.New("Hello error world"), err)
 		assert.Regexp(".+ \\[ ERROR \\] Hello error world", logs())
 
 	})

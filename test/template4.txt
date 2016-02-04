@@ -1,0 +1,7 @@
+${DATABASE}
+Escaped1=\${DATABASE} EscapedDefault1=\${DATABASE:-db2.example.com} EscapedDefaultReplaced1=\${ANOTHER_DATABASE:-db2.example.com}
+NoEscape1=\\${DATABASE} NoEscapeDefault1=\\${DATABASE:-db2.example.com} NoEscapeDefaultReplaced1=\\${ANOTHER_DATABASE:-db2.example.com}
+Escaped2=\\\${DATABASE} EscapedDefault2=\\\${DATABASE:-db2.example.com} EscapedDefaultReplaced2=\\\${ANOTHER_DATABASE:-db2.example.com}
+NoEscape2=\\\\${DATABASE} NoEscapeDefault2=\\\\${DATABASE:-db2.example.com} NoEscapeDefaultReplaced2=\\\\${ANOTHER_DATABASE:-db2.example.com}
+Escaped3=\\\\\${DATABASE} EscapedDefault3=\\\\\${DATABASE:-db2.example.com} EscapedDefaultReplaced3=\\\\\${ANOTHER_DATABASE:-db2.example.com}
+NoEscape3=\\\\\\${DATABASE} NoEscapeDefault3=\\\\\\${DATABASE:-db2.example.com} NoEscapeDefaultReplaced3=\\\\\\${ANOTHER_DATABASE:-db2.example.com}

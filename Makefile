@@ -20,4 +20,6 @@ release:
 	github-release upload --user $(USER) --repo $(REPO) --tag $(VERSION) -s $(TOKEN) --name ep-linux --file out/linux/ep
 
 test:
-	DATABASE=db.example.com NULL= MODE=debug go test -cover
+	go test -cover
+
+.PHONY: test

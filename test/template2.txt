@@ -1,0 +1,4 @@
+Double1=${DATABASE} Double2=${DATABASE}
+Double3=${DATABASE:-db2.example.com} Double4=${DATABASE:-db2.example.com}
+DoubleDefault1=${ANOTHER_DATABASE:-db2-example.com} DoubleDefault2=${ANOTHER_DATABASE:-db2-example.com}
+EmptyDefault=${UNDEFINED_VARIABLE:-}

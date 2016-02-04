@@ -1,35 +1,63 @@
 package envplate
 
 import (
+	"errors"
 	"fmt"
-	"log"
+	"io"
+	_log "log"
+	"os"
+)
+
+const (
+
+	// RAW indicates a log message should be send directly to stdout
+	RAW logLevel = "RAW"
+
+	// DEBUG indicates log message that are only visible when the verbose flag it set
+	DEBUG = "DEBUG"
+
+	// INFO indicates regular log messages
+	INFO = "INFO"
+
+	// ERROR indicates error log messages
+	ERROR = "ERROR"
 )
 
 type logLevel string
 
-const (
-	DEBUG logLevel = "DEBUG"
-	INFO           = "INFO"
-	ERROR          = "ERROR"
-)
+type logger struct {
+	Out     io.Writer
+	Verbose bool
+}
 
-var (
-	DebugAndInfoFunc = log.Printf
-	ErrorFunc        = log.Fatalf
-)
+// Log exposes a logger with a custom envplate formatting syntax
+var Logger = &logger{Out: os.Stdout}
 
-func Log(lvl logLevel, msg string, args ...interface{}) {
+// Log emits log messages and filters based on the set verbosity - if an error
+// is logged, the error msg is returned as error object
+func Log(lvl logLevel, msg string, args ...interface{}) error {
+	return Logger.log(lvl, msg, args...)
+}
 
-	if lvl == DEBUG && !Config.Verbose {
-		return
+func (l *logger) log(lvl logLevel, msg string, args ...interface{}) error {
+
+	if lvl == DEBUG && !l.Verbose {
+		return nil
 	}
 
-	msg = fmt.Sprintf("[ %s ] %s", lvl, msg)
+	msg = fmt.Sprintf(msg, args...)
+
+	if lvl == RAW {
+		fmt.Fprintf(l.Out, msg)
+		return nil
+	}
+
+	_log.Printf("[ %s ] %s", lvl, msg)
 
 	if lvl == ERROR {
-		ErrorFunc(msg, args...)
-	} else {
-		DebugAndInfoFunc(msg, args...)
+		return errors.New(msg)
 	}
+
+	return nil
 
 }

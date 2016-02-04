@@ -1,0 +1,28 @@
+{
+	"ImportPath": "github.com/kreuzwerker/envplate",
+	"GoVersion": "go1.5.3",
+	"Deps": [
+		{
+			"ImportPath": "github.com/davecgh/go-spew/spew",
+			"Rev": "65ca732a33a40c2a5b9e036f236f975e7e85cf6c"
+		},
+		{
+			"ImportPath": "github.com/joho/godotenv",
+			"Comment": "v1-10-g4ed1339",
+			"Rev": "4ed13390c0acd2ff4e371e64d8b97c8954138243"
+		},
+		{
+			"ImportPath": "github.com/pmezard/go-difflib/difflib",
+			"Rev": "792786c7400a136282c1664665ae0a8db921c6c2"
+		},
+		{
+			"ImportPath": "github.com/stretchr/testify/assert",
+			"Comment": "v1.1.3-2-g9f9027f",
+			"Rev": "9f9027faeb0dad515336ed2f28317f9f8f527ab4"
+		},
+		{
+			"ImportPath": "github.com/yawn/envmap",
+			"Rev": "45241142781edb43b57fefaf356a7526435ff719"
+		}
+	]
+}

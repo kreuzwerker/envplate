@@ -1,8 +1,6 @@
 package envplate
 
 import (
-	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -12,14 +10,19 @@ import (
 )
 
 const (
-	NoDefaultDefined    = ""
-	NotAnEscapeSequence = ""
-	DefaultValueSyntax  = ":-"
+	noDefaultDefined    = ""
+	notAnEscapeSequence = ""
 )
+
+type Handler struct {
+	Backup bool
+	DryRun bool
+	Strict bool
+}
 
 var exp = regexp.MustCompile(`(\\*)\$\{(.+?)(?:(\:\-)(.*?))?\}`)
 
-func Apply(globs []string) {
+func (h *Handler) Apply(globs []string) error {
 
 	matches := false
 
@@ -28,7 +31,7 @@ func Apply(globs []string) {
 		files, err := filepath.Glob(pattern)
 
 		if err != nil {
-			Log(ERROR, err.Error())
+			return err
 		}
 
 		for _, name := range files {
@@ -39,8 +42,8 @@ func Apply(globs []string) {
 
 			matches = true
 
-			if err := parse(name); err != nil {
-				Log(ERROR, "Error while parsing '%s': %v", name, err)
+			if err := h.parse(name); err != nil {
+				return Log(ERROR, "Error while parsing '%s': %v", name, err)
 			}
 
 		}
@@ -48,67 +51,39 @@ func Apply(globs []string) {
 	}
 
 	if !matches {
-		Log(ERROR, "Zero files matched passed globs '%v'", globs)
-	}
-
-}
-
-func createBackup(file string) error {
-
-	source, err := os.Open(file)
-
-	if err != nil {
-		return err
-	}
-
-	defer source.Close()
-
-	target, err := os.Create(fmt.Sprintf("%s.bak", file))
-
-	if err != nil {
-		return err
-	}
-
-	defer target.Close()
-
-	if _, err := io.Copy(target, source); err != nil {
-		return err
-	}
-
-	if err := os.Chmod(target.Name(), filemode(source.Name())); err != nil {
-		return err
+		return Log(ERROR, "Zero files matched passed globs '%v'", globs)
 	}
 
 	return nil
 
 }
 
-func parse(file string) error {
+func (h *Handler) parse(file string) error {
 
 	env := envmap.Import()
 	content, err := ioutil.ReadFile(file)
 
 	if err != nil {
-		return fmt.Errorf("Cannot open %s: %v", file, err)
+		return Log(ERROR, "Cannot open %s: %v", file, err)
 	}
 
 	Log(DEBUG, "Parsing environment references in '%s'", file)
 
+	var errors []error
+
 	parsed := exp.ReplaceAllStringFunc(string(content), func(match string) string {
 
 		var (
-			esc, key, sep, def     = capture(match)
-			value, keyDefined = env[key]
+			esc, key, sep, def = capture(match)
+			value, keyDefined  = env[key]
 		)
 
 		if len(esc)%2 == 1 {
 
 			escaped := escape(match)
 
-			if escaped == NotAnEscapeSequence {
-
-				Log(ERROR, "Tried to escape '%s', but was no escape sequence")
-
+			if escaped == notAnEscapeSequence {
+				errors = append(errors, Log(ERROR, "Tried to escape '%s', but was no escape sequence", content))
 			}
 
 			return escaped
@@ -117,12 +92,12 @@ func parse(file string) error {
 
 		if !keyDefined {
 
-			if sep == NoDefaultDefined {
-				Log(ERROR, "'%s' requires undeclared environment variable '%s', no default is given", file, key)
+			if sep == noDefaultDefined {
+				errors = append(errors, Log(ERROR, "'%s' requires undeclared environment variable '%s', no default is given", file, key))
 			} else {
 
-				if Config.Strict {
-					Log(ERROR, "'%s' requires undeclared environment variable '%s', but cannot use default '%s' (strict-mode)", file, key, def)
+				if h.Strict {
+					errors = append(errors, Log(ERROR, "'%s' requires undeclared environment variable '%s', but cannot use default '%s' (strict-mode)", file, key, def))
 				} else {
 					Log(DEBUG, "'%s' requires undeclared environment variable '%s', using default '%s'", file, key, def)
 					value = def
@@ -142,11 +117,12 @@ func parse(file string) error {
 
 	})
 
-	if Config.DryRun {
-		Log(INFO, "Expanding all references in '%s' would look like this:\n%s", file, parsed)
+	if h.DryRun {
+		Log(INFO, "Expanding all references in '%s' without doing anything (dry-run)", file)
+		Log(RAW, parsed)
 	} else {
 
-		if Config.Backup {
+		if h.Backup {
 
 			Log(DEBUG, "Creating backup of '%s'", file)
 
@@ -156,8 +132,20 @@ func parse(file string) error {
 
 		}
 
-		return ioutil.WriteFile(file, []byte(parsed), filemode(file))
+		mode, err := filemode(file)
 
+		if err != nil {
+			return err
+		}
+
+		if err := ioutil.WriteFile(file, []byte(parsed), mode); err != nil {
+			return err
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return errors[0]
 	}
 
 	return nil
@@ -183,17 +171,13 @@ func escape(s string) (escaped string) {
 	matches := expEscaped.FindStringSubmatch(s)
 
 	if matches == nil {
-
-		return NotAnEscapeSequence
-
+		return notAnEscapeSequence
 	}
 
 	bss := matches[1]
 
 	if len(bss)%2 != 1 {
-
-		return NotAnEscapeSequence
-
+		return notAnEscapeSequence
 	}
 
 	parsedBss := bss[:len(bss)-1][:(len(bss)-1)/2]
@@ -203,17 +187,5 @@ func escape(s string) (escaped string) {
 	Log(DEBUG, "Substituting escaped sequence '%s' with '%s'", s, escaped)
 
 	return escaped
-
-}
-
-func filemode(file string) os.FileMode {
-
-	fileinfo, err := os.Stat(file)
-
-	if err != nil {
-		Log(ERROR, "Cannot stat '%s': %v", file, err)
-	}
-
-	return fileinfo.Mode()
 
 }

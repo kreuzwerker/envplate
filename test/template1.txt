@@ -1,0 +1,7 @@
+Database1=${DATABASE}
+Mode=${MODE}
+Null=${NULL}
+Database2=${DATABASE}
+Database3=$NOT_A_VARIABLE
+Database4=${ANOTHER_DATABASE:-db2.example.com}
+Database5=${DATABASE:-db2.example.com}

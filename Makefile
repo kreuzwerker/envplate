@@ -1,25 +1,24 @@
-TOKEN = `cat .token`
+VERSION := "1.0.0-RC1"
 REPO := envplate
 USER := kreuzwerker
-VERSION := "v0.0.8"
+TOKEN = `cat .token`
+FLAGS := "-X=main.build=`git rev-parse --short HEAD` -X=main.version=$(VERSION)"
 
-build: darwin linux
+.PHONY: build clean release retract
 
-darwin:
-	mkdir -p out/darwin
-	GOOS=darwin go build -o out/darwin/ep -ldflags "-X=main.build=`git rev-parse --short HEAD`" bin/envplate.go
-linux:
-	mkdir -p out/linux
-	GOOS=linux go build -o out/linux/ep -ldflags "-X=main.build=`git rev-parse --short HEAD`" bin/envplate.go
+build:
+	cd bin && mkdir -p build  && gox -osarch="linux/amd64 linux/arm darwin/amd64" -ldflags $(FLAGS) -output "../build/{{.OS}}-{{.Arch}}/ep";
+
 clean:
-	rm -rf out
+	rm -rf build
 
 release:
+	git tag $(VERSION) -f && git push --tags -f
 	github-release release --user $(USER) --repo $(REPO) --tag $(VERSION) -s $(TOKEN)
-	github-release upload --user $(USER) --repo $(REPO) --tag $(VERSION) -s $(TOKEN) --name ep-osx --file out/darwin/ep
-	github-release upload --user $(USER) --repo $(REPO) --tag $(VERSION) -s $(TOKEN) --name ep-linux --file out/linux/ep
+	github-release upload --user $(USER) --repo $(REPO) --tag $(VERSION) -s $(TOKEN) --name ep-osx --file build/darwin/ep
+	github-release upload --user $(USER) --repo $(REPO) --tag $(VERSION) -s $(TOKEN) --name ep-linux --file build/linux-amd64/ep
+	github-release upload --user $(USER) --repo $(REPO) --tag $(VERSION) -s $(TOKEN) --name ep-linux-arm --file build/linux-arm/ep
+	github-release upload --user $(USER) --repo $(REPO) --tag $(VERSION) -s $(TOKEN) --name ep-osx --file build/darwin-amd64/ep
 
-test:
-	go test -cover
-
-.PHONY: test
+retract:
+	github-release delete --tag $(VERSION) -s $(TOKEN)

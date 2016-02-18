@@ -16,6 +16,10 @@ var (
 	version string
 )
 
+func init() {
+	os.Args = doubledash.Args
+}
+
 func main() {
 
 	var ( // flags
@@ -25,20 +29,12 @@ func main() {
 		verbose *bool
 	)
 
-	os.Args = doubledash.Args
-
-	// commands
 	root := &cobra.Command{
 		Use:   "ep",
-		Short: "envplate provides trivial templating for configuration files using environment keys",
+		Short: fmt.Sprintf("envplate %s (%s) provides trivial templating for configuration files using environment keys", version, build),
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			envplate.Logger.Verbose = *verbose
 		},
-	}
-
-	parse := &cobra.Command{
-		Use:   "parse",
-		Short: "Parse globs and exec after doubledash",
 		Run: func(cmd *cobra.Command, args []string) {
 
 			var h = envplate.Handler{
@@ -66,22 +62,11 @@ func main() {
 		},
 	}
 
-	version := &cobra.Command{
-		Use:   "version",
-		Short: "Print the version information of ep",
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Printf("Envplate %s (%s)\n", version, build)
-		},
-	}
-
-	root.AddCommand(parse)
-	root.AddCommand(version)
-
 	// flag parsing
-	backup = parse.Flags().BoolP("backup", "b", false, "Create a backup file when using inline mode")
-	dryRun = parse.Flags().BoolP("dry-run", "d", false, "Dry-run - output templates to stdout instead of inline replacement")
-	strict = parse.Flags().BoolP("strict", "s", false, "Strict-mode - fail when falling back on defaults")
-	verbose = parse.Flags().BoolP("verbose", "v", false, "Verbose logging")
+	backup = root.Flags().BoolP("backup", "b", false, "Create a backup file when using inline mode")
+	dryRun = root.Flags().BoolP("dry-run", "d", false, "Dry-run - output templates to stdout instead of inline replacement")
+	strict = root.Flags().BoolP("strict", "s", false, "Strict-mode - fail when falling back on defaults")
+	verbose = root.Flags().BoolP("verbose", "v", false, "Verbose logging")
 
 	if err := root.Execute(); err != nil {
 		log.Fatalf("Failed to start the application: %v", err)

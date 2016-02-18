@@ -3,8 +3,7 @@ go:
   - 1.5
   - tip
 sudo: false
-install:
-  - go get github.com/stretchr/testify/assert
-  - go get golang.org/x/tools/cmd/cover
+before_script:
+  chmod 765 test/filemode.txt
 script:
-  - make test
+  - go test -cover

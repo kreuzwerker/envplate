@@ -90,11 +90,12 @@ func (h *Handler) parse(file string) error {
 				errors = append(errors, Log(ERROR, "Tried to escape '%s', but was no escape sequence", content))
 			}
 
-			data, err := fromCharset(escaped, h.Charset)
+			encodedValue, err := convertToCharset(escaped, h.Charset)
 			if err != nil {
+				errors = append(errors, Log(ERROR, "Tried to convert string '%s' to charset '%s'  but an error ocourred: %v", encodedValue, h.Charset, err))
 				return value
 			}
-			return data
+			return encodedValue
 		}
 
 		if !keyDefined {
@@ -119,11 +120,12 @@ func (h *Handler) parse(file string) error {
 		if len(esc) > 0 {
 			value = esc[:len(esc)/2] + value
 		}
-		data, err := fromCharset(value, h.Charset)
+		encodedValue, err := convertToCharset(value, h.Charset)
 		if err != nil {
+			errors = append(errors, Log(ERROR, "Tried to convert string '%s' to charset '%s'  but an error ocourred: %v", encodedValue, h.Charset, err))
 			return value
 		}
-		return string(data)
+		return encodedValue
 	})
 
 	if h.DryRun {
@@ -166,14 +168,14 @@ func saveFile(file string, parsed string, cs string) error {
 	return nil
 }
 
-func fromCharset(data string, cs string) (string, error) {
-	if cs == "" {
+func convertToCharset(data string, charSet string) (string, error) {
+	if charSet == "" {
 		return data, nil
 	}
 	
 	buf := new(bytes.Buffer)
-	w, err := charset.NewWriter(cs, buf)
-	if err != nil {
+	w, err := charset.NewWriter(charSet, buf)
+	if err != nil {				
 	    return "", err
 	}
 	fmt.Fprintf(w, data)

@@ -1,5 +1,5 @@
 {
-	"ImportPath": "github.com/kreuzwerker/envplate",
+	"ImportPath": "github.com/danielmkraus/envplate",
 	"GoVersion": "go1.5.3",
 	"Deps": [
 		{
@@ -23,6 +23,10 @@
 		{
 			"ImportPath": "github.com/yawn/envmap",
 			"Rev": "45241142781edb43b57fefaf356a7526435ff719"
-		}
+		},
+		{
+			"ImportPath": "github.com/paulrosania/go-charset/charset",
+			"Rev": "621bb39fcc835dce592e682f5073025d0169587b"
+		}		
 	]
 }

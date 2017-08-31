@@ -94,7 +94,7 @@ func (h *Handler) parse(file string) error {
 			if err != nil {
 				return value
 			}
-			return string(data)
+			return data
 		}
 
 		if !keyDefined {
@@ -166,19 +166,19 @@ func saveFile(file string, parsed string, cs string) error {
 	return nil
 }
 
-func fromCharset(data string, cs string) ([]byte, error) {
+func fromCharset(data string, cs string) (string, error) {
 	if cs == "" {
-		return []byte(data)
+		return data, nil
 	}
 	
 	buf := new(bytes.Buffer)
 	w, err := charset.NewWriter(cs, buf)
 	if err != nil {
-	    return nil, err
+	    return "", err
 	}
 	fmt.Fprintf(w, data)
 	w.Close()
-	return buf.Bytes(), nil
+	return string(buf.Bytes()), nil
 }
 
 func capture(s string) (esc, key, sep, def string) {

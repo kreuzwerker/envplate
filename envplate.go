@@ -5,9 +5,12 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"fmt"
+	"bytes"
 
 	"github.com/yawn/envmap"
-)
+	"github.com/paulrosania/go-charset/charset"
+) 
 
 const (
 	noDefaultDefined    = ""
@@ -15,9 +18,10 @@ const (
 )
 
 type Handler struct {
-	Backup bool
-	DryRun bool
-	Strict bool
+	Backup  bool
+	DryRun  bool
+	Strict  bool
+	Charset string
 }
 
 var exp = regexp.MustCompile(`(\\*)\$\{(.+?)(?:(\:\-)(.*?))?\}`)
@@ -62,7 +66,7 @@ func (h *Handler) parse(file string) error {
 
 	env := envmap.Import()
 	content, err := ioutil.ReadFile(file)
-
+	
 	if err != nil {
 		return Log(ERROR, "Cannot open %s: %v", file, err)
 	}
@@ -86,8 +90,11 @@ func (h *Handler) parse(file string) error {
 				errors = append(errors, Log(ERROR, "Tried to escape '%s', but was no escape sequence", content))
 			}
 
-			return escaped
-
+			data, err := fromCharset(escaped, h.Charset)
+			if err != nil {
+				return value
+			}
+			return string(data)
 		}
 
 		if !keyDefined {
@@ -112,9 +119,11 @@ func (h *Handler) parse(file string) error {
 		if len(esc) > 0 {
 			value = esc[:len(esc)/2] + value
 		}
-
-		return value
-
+		data, err := fromCharset(value, h.Charset)
+		if err != nil {
+			return value
+		}
+		return string(data)
 	})
 
 	if h.DryRun {
@@ -131,17 +140,9 @@ func (h *Handler) parse(file string) error {
 			}
 
 		}
-
-		mode, err := filemode(file)
-
-		if err != nil {
+		if err := saveFile(file, parsed, h.Charset); err != nil {
 			return err
 		}
-
-		if err := ioutil.WriteFile(file, []byte(parsed), mode); err != nil {
-			return err
-		}
-
 	}
 
 	if len(errors) > 0 {
@@ -149,7 +150,35 @@ func (h *Handler) parse(file string) error {
 	}
 
 	return nil
+}
 
+
+func saveFile(file string, parsed string, cs string) error {
+	mode, err := filemode(file)
+	if err != nil {
+		return err
+	}
+
+	if err := ioutil.WriteFile(file, []byte(parsed), mode); err != nil {
+		return err
+	}
+	
+	return nil
+}
+
+func fromCharset(data string, cs string) ([]byte, error) {
+	if cs == "" {
+		return []byte(data)
+	}
+	
+	buf := new(bytes.Buffer)
+	w, err := charset.NewWriter(cs, buf)
+	if err != nil {
+	    return nil, err
+	}
+	fmt.Fprintf(w, data)
+	w.Close()
+	return buf.Bytes(), nil
 }
 
 func capture(s string) (esc, key, sep, def string) {

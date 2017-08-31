@@ -27,6 +27,7 @@ func main() {
 		dryRun  *bool
 		strict  *bool
 		verbose *bool
+		charset *string
 	)
 
 	root := &cobra.Command{
@@ -41,6 +42,7 @@ func main() {
 				Backup: *backup,
 				DryRun: *dryRun,
 				Strict: *strict,
+				Charset: *charset,
 			}
 
 			if err := h.Apply(args); err != nil {
@@ -67,6 +69,7 @@ func main() {
 	dryRun = root.Flags().BoolP("dry-run", "d", false, "Dry-run - output templates to stdout instead of inline replacement")
 	strict = root.Flags().BoolP("strict", "s", false, "Strict-mode - fail when falling back on defaults")
 	verbose = root.Flags().BoolP("verbose", "v", false, "Verbose logging")
+	charset = root.Flags().StringP("charset", "c", "", "Output charset")
 
 	if err := root.Execute(); err != nil {
 		log.Fatalf("Failed to start the application: %v", err)

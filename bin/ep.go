@@ -9,6 +9,7 @@ import (
 	"github.com/kreuzwerker/envplate"
 	"github.com/spf13/cobra"
 	"github.com/yawn/doubledash"
+	_ "github.com/paulrosania/go-charset/data"
 )
 
 var (

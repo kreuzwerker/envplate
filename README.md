@@ -17,6 +17,7 @@ Optionally, `ep` can:
 * dry-run (`-d` flag): output to stdout instead of replacing values inline
 * strict (`-s` flag): refuse to fallback to default values
 * verbose (`-v` flag): be verbose about it's operations
+* charset (`-c` flag): specify a custom charset to replace variables. Example: `/usr/local/bin/ep -c iso8859-1 *.conf`
 
 `ep` can also `exec()` another command by passing
 

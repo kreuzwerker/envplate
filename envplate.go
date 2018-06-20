@@ -118,7 +118,7 @@ func (h *Handler) parse(file string) error {
 	})
 
 	if h.DryRun {
-		Log(INFO, "Expanding all references in '%s' without doing anything (dry-run)", file)
+		Log(DEBUG, "Expanding all references in '%s' without doing anything (dry-run)", file)
 		Log(RAW, parsed)
 	} else {
 

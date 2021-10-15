@@ -1,13 +1,16 @@
-VERSION := "1.0.0-RC1"
+VERSION := "0.1.0"
 REPO := envplate
 USER := kreuzwerker
 TOKEN = `cat .token`
 FLAGS := "-X=main.build=`git rev-parse --short HEAD` -X=main.version=$(VERSION)"
 
-.PHONY: build clean release retract
+.PHONY: build clean test release retract
 
 build:
-	cd bin && mkdir -p build  && gox -osarch="linux/amd64 linux/arm darwin/amd64" -ldflags $(FLAGS) -output "../build/{{.OS}}-{{.Arch}}/ep";
+	mkdir -p build
+	GOOS=linux GOARCH=amd64 go build -ldflags $(FLAGS) -o build/linux-amd64/ep bin/ep.go
+	GOOS=linux GOARCH=arm go build -ldflags $(FLAGS) -o build/linux-arm/ep bin/ep.go
+	GOOS=darwin GOARCH=amd64 go build -ldflags $(FLAGS) -o build/darwin-amd64/ep bin/ep.go
 
 clean:
 	rm -rf build

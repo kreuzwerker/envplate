@@ -1,5 +1,10 @@
 # Envplate
 
+[![Release](https://img.shields.io/github/v/release/kreuzwerker/envplate)](https://github.com/kreuzwerker/envplate/releases)
+[![Build Status](https://github.com/kreuzwerker/envplate/workflows/build/badge.svg)](https://github.com/kreuzwerker/envplate/actions)
+[![Documentation](https://godoc.org/github.com/kreuzwerker/envplate?status.svg)](http://godoc.org/github.com/kreuzwerker/envplate) 
+[![Go Report Card](https://goreportcard.com/badge/github.com/kreuzwerker/envplate)](https://goreportcard.com/report/github.com/kreuzwerker/envplate) 
+
 Trivial templating for configuration files using environment keys. References to such keys are declared in arbitrary config files either as:
 
 1. `${key}` or

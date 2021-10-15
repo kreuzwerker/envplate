@@ -1,0 +1,39 @@
+before:
+  hooks:
+    - go mod tidy
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - arm64
+      - amd64
+      - "386"
+    goarm:
+      - 6
+    main: ./bin/ep.go
+archives:
+  - replacements:
+      darwin: Darwin
+      linux: Linux
+      386: i386
+      amd64: x86_64
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ incpatch .Tag }}-next"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+brews:
+  - tap:
+      owner: kreuzwerker
+      name: homebrew-taps
+      token: "{{ .Env.GORELEASER_TOKEN }}"
+    homepage: "https://github.com/kreuzwerker/envplate"
+    description: "Docker-friendly trivial templating for configuration files using environment keys."

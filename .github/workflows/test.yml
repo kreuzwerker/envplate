@@ -12,7 +12,7 @@ on:
       - 'README.md'
 jobs:
   unit:
-  runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:

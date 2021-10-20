@@ -12,7 +12,11 @@ on:
       - 'README.md'
 jobs:
   unit:
-    runs-on: ubuntu-20.04
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -26,4 +30,4 @@ jobs:
         run: |
           chmod 765 test/filemode.txt
       - name: Run tests
-        run: make test
+        run: go test -v -race -cover

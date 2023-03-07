@@ -49,6 +49,7 @@ RUN wget -q https://github.com/kreuzwerker/envplate/releases/download/v1.0.2/env
 
 CMD [ "/usr/local/bin/ep", "-v", "/etc/nginx/nginx.conf", "--", "/usr/sbin/nginx", "-c", "/etc/nginx/nginx.conf" ]
 ```
+Have a look at https://github.com/avthart/docker-nginx-env/blob/master/Dockerfile to see a working example Dockerfile.
 
 ## Full example
 

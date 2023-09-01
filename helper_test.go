@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"testing"
@@ -25,7 +24,7 @@ func _exists(name string) bool {
 
 func _read(t *testing.T, name string) string {
 
-	content, err := ioutil.ReadFile(name)
+	content, err := os.ReadFile(name)
 
 	if err != nil {
 		t.Fatal(fmt.Errorf("error while reading '%s': %v", name, err))
@@ -82,7 +81,7 @@ func _restore(file string) {
 
 func _tmpdir(t *testing.T, f func(string)) {
 
-	dir, err := ioutil.TempDir("", "")
+	dir, err := os.MkdirTemp("", "")
 
 	if err != nil {
 		t.Fatal(err)
@@ -96,7 +95,7 @@ func _tmpdir(t *testing.T, f func(string)) {
 
 func _write(t *testing.T, name, content string, mode os.FileMode) string {
 
-	file, err := ioutil.TempFile("", name)
+	file, err := os.CreateTemp("", name)
 
 	if err != nil {
 		t.Fatalf("Error while opening '%s': %v", name, err)

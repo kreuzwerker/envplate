@@ -229,11 +229,30 @@ func TestStrictParse(t *testing.T) {
 		file = "test/template4.txt"
 	)
 
-	defer _restore(file)
-
 	err := handler.parse(file)
 	assert.Error(err)
 
 	assert.Equal("'test/template4.txt' requires undeclared environment variable 'ANOTHER_DATABASE', but cannot use default 'db2.example.com' (strict-mode)", err.Error())
+
+}
+
+func TestAbortOnParseErrors(t *testing.T) {
+
+	assert := assert.New(t)
+	handler := &Handler{
+		Backup: true,
+		Strict: true,
+	}
+
+	var (
+		file     = "test/template4.txt"
+		template = _read(t, file)
+	)
+
+	err := handler.parse(file)
+	assert.Error(err)
+
+	assert.Equal(template, _read(t, file))
+	assert.NoFileExists(fmt.Sprintf("%s.bak", file))
 
 }

@@ -116,6 +116,10 @@ func (h *Handler) parse(file string) error {
 
 	})
 
+	if len(errors) > 0 {
+		return errors[0]
+	}
+
 	if h.DryRun {
 		Log(DEBUG, "Expanding all references in '%s' without doing anything (dry-run)", file)
 		Log(RAW, parsed)
@@ -141,10 +145,6 @@ func (h *Handler) parse(file string) error {
 			return err
 		}
 
-	}
-
-	if len(errors) > 0 {
-		return errors[0]
 	}
 
 	return nil

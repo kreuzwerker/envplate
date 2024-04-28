@@ -3,7 +3,6 @@ package envplate
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -65,7 +64,7 @@ func (h *Handler) Apply(globs []string) error {
 func (h *Handler) parse(file string) error {
 
 	env := envmap.Import()
-	content, err := ioutil.ReadFile(file)
+	content, err := os.ReadFile(file)
 
 	if err != nil {
 		return Log(ERROR, "Cannot open %s: %v", file, err)
@@ -131,6 +130,10 @@ func (h *Handler) parse(file string) error {
 
 	})
 
+	if len(errors) > 0 {
+		return errors[0]
+	}
+
 	if h.DryRun {
 		Log(DEBUG, "Expanding all references in '%s' without doing anything (dry-run)", file)
 		Log(RAW, parsed)
@@ -152,10 +155,6 @@ func (h *Handler) parse(file string) error {
 
 	}
 
-	if len(errors) > 0 {
-		return errors[0]
-	}
-
 	return nil
 
 }
@@ -166,7 +165,7 @@ func saveFile(file string, parsed string, cs string) error {
 		return err
 	}
 
-	if err := ioutil.WriteFile(file, []byte(parsed), mode); err != nil {
+	if err := os.WriteFile(file, []byte(parsed), mode); err != nil {
 		return err
 	}
 

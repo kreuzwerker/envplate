@@ -76,3 +76,18 @@ NotEscaped1=\db.example.com
 Escaped2=\${BAR_DATABASE:-db2.example.com}
 NotEscaped2=\\db2.example.com
 ```
+
+### Sample docker file
+
+```
+FROM nginx:latest
+MAINTAINER Albert van t Hart <avthart@gmail.com>
+
+ADD https://github.com/kreuzwerker/envplate/releases/download/v0.0.7/ep-linux /bin/ep
+RUN chmod +x /bin/ep
+
+EXPOSE 80 443
+
+CMD [ "/bin/ep", "-v", "/etc/nginx/*.conf", "--", "/usr/sbin/nginx", "-g", "daemon off;" ]
+```
+Source: https://github.com/avthart/docker-nginx-env
